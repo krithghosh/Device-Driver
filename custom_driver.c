@@ -12,7 +12,7 @@
 /* forward declaration */
 int onebyte_open(struct inode *inode, struct file *filep);
 int onebyte_release(struct inode *inode, struct file *filep);
-ssize_t onebyte_read(struct file *filep, char *buf, size_tcount, loff_t *f_pos);
+ssize_t onebyte_read(struct file *filep, char *buf, size_t count, loff_t *f_pos);
 ssize_t onebyte_write(struct file *filep, const char *buf, size_t count, loff_t *f_pos);
 static void onebyte_exit(void);
 
@@ -42,7 +42,7 @@ ssize_t onebyte_read(struct file *filep, char *buf, size_t count, loff_t *f_pos)
 	if(*f_pos + count > sizeof(char)) {
     	   count = sizeof(char) - *f_pos;
 	}	
-	if(copy_to_user(buf, onebyte_data + *f_pos, count) != 0) {
+	if(raw_copy_to_user(buf, onebyte_data + *f_pos, count) != 0) {
     	   return -EFAULT;
 	}    
 	*f_pos += count;
@@ -51,7 +51,7 @@ ssize_t onebyte_read(struct file *filep, char *buf, size_t count, loff_t *f_pos)
 
 ssize_t onebyte_write(struct file *filep, const char *buf, size_t count, loff_t *f_pos) {
 	int write = 0;	
-	copy_from_user(onebyte_data, buf, sizeof(char));
+	raw_copy_from_user(onebyte_data, buf, sizeof(char));
 
 	if(count > sizeof(char)) {
 	   printk(KERN_ALERT "No space left on device\n");
@@ -79,8 +79,7 @@ static int onebyte_init(void) {
 	if (!onebyte_data) {
 	   onebyte_exit();
 	   // cannot allocate memory
-	   // return no memory error, negative signify a
-	   failure
+	   // return no memory error, negative signify a failure
 	   return -ENOMEM;
 	}
 
